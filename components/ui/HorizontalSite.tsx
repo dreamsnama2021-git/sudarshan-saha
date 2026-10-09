@@ -79,6 +79,7 @@ export function HorizontalSite({ children, overlay }: { children: ReactNode; ove
   const registry = useRef(new Set<Registered>());
   const measured = useRef<Measured[]>([]);
   const trackRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const [isDesktop, setIsDesktop] = useState(false);
   const [current, setCurrent] = useState(0);
   const [labels, setLabels] = useState<string[]>([]);
@@ -140,15 +141,9 @@ export function HorizontalSite({ children, overlay }: { children: ReactNode; ove
     setLabels(panels.map((p) => p.label));
     setIds(panels.map((p) => p.id));
 
-    if (!desktop) {
-      measured.current = [];
-      panels.forEach((p) => p.y.set(0));
-      x.set(0);
-      height.set("auto");
-      return;
-    }
-
-    const vh = window.innerHeight;
+    // The pinned viewport is 100svh tall. Measuring it (not window.innerHeight) keeps the layout stable
+    // when a phone's address bar shows/hides and changes the window height.
+    const vh = stickyRef.current?.clientHeight || window.innerHeight;
     const maxX = Math.max(0, panels.reduce((sum, p) => sum + p.outer.offsetWidth, 0) - window.innerWidth);
     let start = 0;
     let x0 = 0;
@@ -202,7 +197,8 @@ export function HorizontalSite({ children, overlay }: { children: ReactNode; ove
     if (!panel) return null;
     if (el === panel.outer || el === panel.inner) return panel.start;
     const within = el.getBoundingClientRect().top - panel.inner.getBoundingClientRect().top;
-    return panel.start + Math.min(panel.overflow, Math.max(0, within - window.innerHeight * 0.25));
+    const vh = stickyRef.current?.clientHeight || window.innerHeight;
+    return panel.start + Math.min(panel.overflow, Math.max(0, within - vh * 0.25));
   }, []);
 
   // In-page anchors (#work, #about…) can't use native jumps inside a pinned strip — route them here.
@@ -234,35 +230,35 @@ export function HorizontalSite({ children, overlay }: { children: ReactNode; ove
     if (top !== null) window.scrollTo({ top, behavior: "auto" });
   };
 
-  const currentId = isDesktop ? (ids[current] ?? null) : null;
+  const currentId = ids[current] ?? null;
   const contextValue = useMemo(() => ({ isDesktop, register, x, currentId }), [isDesktop, register, x, currentId]);
 
   return (
     <SiteContext.Provider value={contextValue}>
       <motion.div style={{ height }} className="relative">
-        <div className="relative lg:sticky lg:top-0 lg:h-[100svh] lg:overflow-hidden">
+        <div ref={stickyRef} className="sticky top-0 h-[100svh] overflow-hidden">
           <motion.div
             ref={trackRef}
             style={{ x }}
             onFocusCapture={onFocusCapture}
-            className="flex flex-col lg:h-full lg:w-max lg:flex-row"
+            className="flex h-full w-max flex-row"
           >
             {children}
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Site-wide progress (desktop): hairline along the bottom edge, counter left, section name right. */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-40 hidden lg:block">
+      {/* Site-wide progress: hairline along the bottom edge, counter left, section name right. */}
+      <div aria-hidden="true" className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
         <span className="absolute inset-x-0 bottom-0 h-px bg-line">
           <motion.span className="absolute inset-0 origin-left bg-amber" style={{ scaleX: overall }} />
         </span>
-        <div className="mx-[3vw] flex items-center justify-between pb-5">
+        <div className="mx-4 flex items-center justify-between pb-5 sm:mx-[3vw]">
           <span className="font-mono text-[0.7rem] tabular-nums text-bone">
             {String(current + 1).padStart(2, "0")}
             <span className="text-mute"> / {String(labels.length).padStart(2, "0")}</span>
           </span>
-          <span className="font-mono text-[0.65rem] uppercase tracking-[0.2em] text-bone/70">{labels[current]}</span>
+          <span className="hidden font-mono text-[0.65rem] uppercase tracking-[0.2em] text-bone/70 sm:inline">{labels[current]}</span>
         </div>
       </div>
       {overlay}
@@ -282,10 +278,10 @@ type PanelProps = {
   className?: string;
   /** Classes for the scrolling content layer. */
   innerClassName?: string;
-  /** Pinned column that stays put while a vertical panel's content scrolls (desktop). */
+  /** Pinned column that stays put while a vertical panel's content scrolls (desktop; scrolls with the content on phones). */
   aside?: ReactNode;
   asideClassName?: string;
-  /** Show a vertical progress line for this panel's own scroll (desktop). */
+  /** Show a vertical progress line for this panel's own scroll. */
   rail?: boolean;
 };
 
@@ -315,11 +311,8 @@ export function Panel({
     return register({ id, outer: outerRef.current, inner: innerRef.current, y, progress, label });
   }, [register, y, progress, label, id]);
 
-  // Below lg the page scrolls normally, so progress comes from the panel's position in the document.
-  const { scrollYProgress } = useScroll({ target: outerRef, offset: ["start 70%", "end 60%"] });
-  useMotionValueEvent(scrollYProgress, "change", (p) => {
-    if (!site?.isDesktop) progress.set(p);
-  });
+  // Desktop pins the aside in its own column; on narrower screens it scrolls with the panel's content instead.
+  const pinAside = Boolean(site?.isDesktop);
 
   const Tag = as === "footer" ? motion.footer : motion.section;
 
@@ -330,15 +323,16 @@ export function Panel({
         ref={outerRef}
         aria-labelledby={labelledBy}
         aria-label={ariaLabel}
-        className={`relative w-full shrink-0 lg:h-[100svh] lg:overflow-hidden ${className}`}
+        className={`relative h-[100svh] w-screen shrink-0 overflow-hidden ${className}`}
       >
         {rail && (
-          <div aria-hidden="true" className="pointer-events-none absolute bottom-20 right-[2.5vw] top-28 z-10 hidden w-px bg-line lg:block">
+          <div aria-hidden="true" className="pointer-events-none absolute bottom-20 right-2 top-24 z-10 w-px bg-line lg:right-[2.5vw] lg:top-28">
             <motion.span className="absolute inset-0 origin-top bg-amber" style={{ scaleY: progress }} />
           </div>
         )}
-        {aside && <div className={`relative z-10 lg:absolute lg:inset-y-0 lg:left-0 ${asideClassName}`}>{aside}</div>}
-        <motion.div ref={innerRef} style={{ y }} className={`relative lg:min-h-full ${innerClassName}`}>
+        {aside && pinAside && <div className={`absolute inset-y-0 left-0 z-10 ${asideClassName}`}>{aside}</div>}
+        <motion.div ref={innerRef} style={{ y }} className={`relative min-h-full ${innerClassName}`}>
+          {aside && !pinAside && <div className={asideClassName}>{aside}</div>}
           {children}
         </motion.div>
       </Tag>

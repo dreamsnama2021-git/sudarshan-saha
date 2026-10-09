@@ -53,7 +53,7 @@ export function Portrait({ className = "", priority = false }: { className?: str
       <span aria-hidden="true" className="hud-tag absolute -right-4 top-[58%] inline-flex translate-x-1/2">+ {growth}</span>
       <span aria-hidden="true" className="hud-tag absolute -left-4 top-[8%] -translate-x-1/2 hidden sm:inline-flex">+ {creative}</span>
 
-      <figcaption className="absolute -bottom-9 left-0 hidden w-full justify-between whitespace-nowrap sm:flex font-mono text-[0.6rem] uppercase tracking-[0.2em] text-mute">
+      <figcaption className="absolute -bottom-9 left-0 hidden w-full justify-between whitespace-nowrap lg:flex font-mono text-[0.6rem] uppercase tracking-[0.2em] text-mute">
         <span>{SITE.handle} / Portfolio 2026</span>
         <span>Digital Command Centre</span>
       </figcaption>

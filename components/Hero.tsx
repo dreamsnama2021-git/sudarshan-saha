@@ -5,7 +5,6 @@ import { ArrowDown, ArrowRight } from "lucide-react";
 import { HeroBackdrop } from "./HeroBackdrop";
 import { ButtonLink } from "./ui/Button";
 import { Panel } from "./ui/HorizontalSite";
-import { Portrait } from "./ui/Portrait";
 import { useGlitchShadow } from "./ui/useGlitch";
 import { EASE, fadeUp, stagger } from "@/lib/motion";
 import { SITE } from "@/lib/site";
@@ -43,7 +42,6 @@ export function Hero() {
 
       {/* Desktop: text starts on the frame's left line (same as the scroll cue), portrait follows after a fixed gap. */}
       <div className="frame flex min-h-[100svh] flex-col justify-center gap-14 pb-24 pt-28 lg:flex-row lg:items-center lg:justify-start lg:gap-[12vw] lg:pb-24">
-        <Portrait priority className="mx-auto aspect-[4/5] w-[64%] max-w-xs lg:hidden" />
 
         <motion.div
           variants={stagger(0.12, 0.15)}
@@ -95,7 +93,11 @@ export function Hero() {
         </motion.div>
 
         {/* Where the travelling portrait starts (drawn as an overlay above this slot). */}
-        <div id="hero-portrait-slot" aria-hidden="true" className="hidden aspect-[4/5] h-[60vh] shrink-0 lg:block" />
+        <div
+          id="hero-portrait-slot"
+          aria-hidden="true"
+          className="order-first mx-auto aspect-[4/5] w-[64%] max-w-xs shrink-0 lg:order-none lg:mx-0 lg:h-[60vh] lg:w-auto lg:max-w-none"
+        />
       </div>
 
       <div className="frame pointer-events-none absolute inset-x-0 bottom-0 flex pb-6 lg:pb-16">

@@ -1,5 +1,4 @@
 import { Panel } from "./ui/HorizontalSite";
-import { Portrait } from "./ui/Portrait";
 import { ExperienceTabs } from "./ExperienceTabs";
 import { Reveal } from "./ui/Reveal";
 import { WordReveal } from "./ui/WordReveal";
@@ -14,9 +13,8 @@ export function About() {
       innerClassName="px-5 py-24 sm:px-8 sm:py-32 lg:flex lg:h-full lg:items-center lg:px-[5vw] lg:pb-20 lg:pt-24"
     >
       <div className="grid w-full grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-[auto_1fr_1.15fr] lg:items-center lg:gap-x-[4vw]">
-        {/* Mobile/tablet: inline portrait. Desktop: an empty slot the hero portrait glides into. */}
+        {/* Desktop only: empty slot the hero portrait glides into (drawn by TravellingPortrait). Phones show the photo once, in the hero. */}
         <div className="sm:col-span-1 lg:col-span-1">
-          <Portrait className="mx-auto aspect-[4/5] w-[72%] max-w-sm lg:hidden" />
           <div
             id="about-portrait-slot"
             aria-hidden="true"

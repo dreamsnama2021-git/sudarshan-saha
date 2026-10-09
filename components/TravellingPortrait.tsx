@@ -1,99 +1,86 @@
 "use client";
 
-import { motion, useMotionValue, useReducedMotion, useTransform, useVelocity } from "framer-motion";
-import { useEffect } from "react";
+import { motion, useMotionValue, useMotionValueEvent, useReducedMotion, useScroll, useTransform, useVelocity } from "framer-motion";
+import { useCallback, useEffect } from "react";
 import { useSite } from "./ui/HorizontalSite";
 import { Portrait } from "./ui/Portrait";
 
 const FROM = "hero-portrait-slot";
 const TO = "about-portrait-slot";
 
+const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
 /**
- * Desktop only. One portrait shared by the hero and About: it sits in the hero's slot and, as the strip
- * slides from the hero to About, glides into About's photo slot — then leaves with the strip.
- * Drawn as a fixed overlay so neither panel clips it mid-flight. Both slots are measured, so the
- * landing spot stays exact at any screen size.
+ * One portrait shared by the hero and About. It sits on the hero's slot and, on desktop, glides into About's
+ * photo slot as the strip slides from the hero to About — then rides along with it. On phones About has
+ * no photo slot, so the portrait simply stays with the hero (shown once).
+ *
+ * Both slots are read live on every scroll frame, so it stays locked to them even while a panel scrolls
+ * vertically (as the hero and About do on phones). Drawn as a fixed overlay so no panel clips it mid-flight.
  */
 export function TravellingPortrait() {
-  const { x, isDesktop } = useSite();
+  const { x } = useSite();
+  const { scrollY } = useScroll();
   const reduceMotion = useReducedMotion();
 
-  // Slot geometry in strip coordinates (independent of how far the strip has scrolled).
-  const fromLeft = useMotionValue(0);
-  const fromTop = useMotionValue(0);
-  const toLeft = useMotionValue(0);
-  const toTop = useMotionValue(0);
+  const left = useMotionValue(0);
+  const top = useMotionValue(0);
   const width = useMotionValue(0);
   const height = useMotionValue(0);
-  const ready = useMotionValue(0);
+  const opacity = useMotionValue(0);
 
-  useEffect(() => {
-    if (!isDesktop) return;
+  const update = useCallback(() => {
     const from = document.getElementById(FROM);
     const to = document.getElementById(TO);
-    if (!from || !to) return;
+    if (!from) return;
+    const a = from.getBoundingClientRect();
+    if (!a.width) return;
+    // The About slot only exists on desktop. Without it, the portrait simply stays with the hero.
+    const toRect = to?.getBoundingClientRect();
+    const b = toRect && toRect.width ? toRect : a;
 
-    const measure = () => {
-      const sx = x.get();
-      const a = from.getBoundingClientRect();
-      const b = to.getBoundingClientRect();
-      fromLeft.set(a.left - sx);
-      fromTop.set(a.top);
-      toLeft.set(b.left - sx);
-      toTop.set(b.top);
-      width.set(a.width);
-      height.set(a.height);
-      ready.set(1);
-    };
+    // Progress through the hero → About slide: 0 while the hero (or its vertical scroll) is on screen,
+    // 1 once About has fully arrived. The hero panel is one viewport wide.
+    const heroPanel = from.closest("section");
+    const travel = heroPanel?.getBoundingClientRect().width || window.innerWidth;
+    const t = Math.min(1, Math.max(0, -x.get() / travel));
 
-    measure();
-    // The slots sit in flex/grid layouts, so they can move without resizing (e.g. when the display font
-    // loads and the name gets wider). Watch the slots *and* their containers, and re-measure on font load.
-    const ro = new ResizeObserver(measure);
-    const watched = new Set<Element>([from, to]);
-    for (const slot of [from, to]) {
-      const parent = slot.parentElement;
-      if (!parent) continue;
-      watched.add(parent);
-      // Siblings (e.g. the hero text block) change size and push the slot around.
-      for (const child of Array.from(parent.parentElement?.children ?? parent.children)) watched.add(child);
-      for (const child of Array.from(parent.children)) watched.add(child);
-    }
-    watched.forEach((el) => ro.observe(el));
-    window.addEventListener("resize", measure);
+    left.set(lerp(a.left, b.left, t));
+    top.set(lerp(a.top, b.top, t));
+    width.set(lerp(a.width, b.width, t));
+    height.set(lerp(a.height, b.height, t));
+    opacity.set(1);
+  }, [x, left, top, width, height, opacity]);
+
+  useMotionValueEvent(x, "change", update);
+  useMotionValueEvent(scrollY, "change", () => requestAnimationFrame(update));
+
+  useEffect(() => {
+    update();
+    const from = document.getElementById(FROM);
+    const to = document.getElementById(TO);
+    const ro = new ResizeObserver(update);
+    if (from) ro.observe(from);
+    if (to) ro.observe(to);
+    window.addEventListener("resize", update);
     let alive = true;
-    document.fonts?.ready.then(() => alive && measure());
-    const t = window.setTimeout(measure, 600);
+    document.fonts?.ready.then(() => alive && update());
+    const t = window.setTimeout(update, 600);
     return () => {
       alive = false;
       ro.disconnect();
-      window.removeEventListener("resize", measure);
+      window.removeEventListener("resize", update);
       window.clearTimeout(t);
     };
-  }, [isDesktop, x, fromLeft, fromTop, toLeft, toTop, width, height, ready]);
-
-  // Progress through the hero → About slide (the hero is one viewport wide).
-  const progress = (sx: number) => {
-    const vw = typeof window === "undefined" ? 1440 : window.innerWidth;
-    return Math.min(1, Math.max(0, -sx / vw));
-  };
-
-  const screenX = useTransform([x, fromLeft, toLeft], ([sx, a, b]: number[]) => {
-    const p = progress(sx);
-    // Before landing: interpolate between the two slots' on-screen positions; after: ride with the strip.
-    return p < 1 ? a + (b - (typeof window === "undefined" ? 1440 : window.innerWidth) - a) * p : b + sx;
-  });
-  const screenY = useTransform([x, fromTop, toTop], ([sx, a, b]: number[]) => a + (b - a) * progress(sx));
+  }, [update]);
 
   const velocity = useVelocity(x);
   const skew = useTransform(velocity, (v) => (reduceMotion ? 0 : Math.max(-6, Math.min(6, v / 500))));
 
-  if (!isDesktop) return null;
-
   return (
     <motion.div
-      style={{ x: screenX, y: screenY, width, height, skewX: skew, opacity: ready }}
-      className="pointer-events-none fixed left-0 top-0 z-30 hidden lg:block"
+      style={{ x: left, y: top, width, height, skewX: skew, opacity }}
+      className="pointer-events-none fixed left-0 top-0 z-30"
     >
       <Portrait priority className="h-full w-full" />
     </motion.div>

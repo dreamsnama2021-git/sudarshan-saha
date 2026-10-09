@@ -17,7 +17,7 @@ export default function HomePage() {
   return (
     <>
       <Navbar />
-      {/* Desktop: one landscape strip of panels. <main> uses display: contents there so its sections join the strip. */}
+      {/* One landscape strip of panels on every screen size. <main> uses display: contents so its sections join the strip. */}
       <HorizontalSite
         overlay={
           <>
@@ -26,7 +26,7 @@ export default function HomePage() {
           </>
         }
       >
-        <main id="main" className="lg:contents">
+        <main id="main" className="contents">
           <Hero />
           <About />
           <Expertise />
