@@ -41,7 +41,7 @@ export function Hero() {
       </div>
 
       {/* Desktop: text starts on the frame's left line (same as the scroll cue), portrait follows after a fixed gap. */}
-      <div className="frame flex min-h-[100svh] flex-col justify-center gap-14 pb-24 pt-28 lg:flex-row lg:items-center lg:justify-start lg:gap-[12vw] lg:pb-24">
+      <div className="frame flex min-h-[100svh] flex-col justify-center gap-14 pb-24 pt-28 lg:flex-row lg:items-center lg:justify-start lg:gap-[18vw] lg:pb-24">
 
         <motion.div
           variants={stagger(0.12, 0.15)}
