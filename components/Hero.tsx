@@ -96,7 +96,7 @@ export function Hero() {
         <div
           id="hero-portrait-slot"
           aria-hidden="true"
-          className="order-first mx-auto aspect-[4/5] w-[64%] max-w-xs shrink-0 lg:order-none lg:mx-0 lg:h-[60vh] lg:w-auto lg:max-w-none"
+          className="order-first mx-auto aspect-[4/5] w-[64%] max-w-xs shrink-0 lg:order-none lg:ml-auto lg:mr-[3vw] lg:h-[60vh] lg:w-auto lg:max-w-none"
         />
       </div>
 
