@@ -12,7 +12,7 @@ export function About() {
       className="overflow-hidden lg:w-screen"
       innerClassName="px-5 py-24 sm:px-8 sm:py-32 lg:flex lg:h-full lg:items-center lg:px-[5vw] lg:pb-20 lg:pt-24"
     >
-      <div className="grid w-full grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-[auto_1fr_1.15fr] lg:items-center lg:gap-x-[4vw]">
+      <div className="grid w-full grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-[auto_1.1fr_1fr] lg:items-center lg:gap-x-[3vw]">
         {/* Desktop only: empty slot the hero portrait glides into (drawn by TravellingPortrait). Phones show the photo once, in the hero. */}
         <div className="sm:col-span-1 lg:col-span-1">
           <div
@@ -22,7 +22,7 @@ export function About() {
           />
         </div>
 
-        <div className="sm:col-span-1 lg:col-span-1">
+        <div className="sm:col-span-1 lg:col-span-1 lg:pl-[4vw]">
           <Reveal as="p" className="label">
             <span className="text-amber">(01)</span>&nbsp;&nbsp;About
           </Reveal>
