@@ -1,0 +1,10 @@
+// Cloudflare Workers config: serve the static export (`npm run build` → ./out) as static assets.
+// Cloudflare build settings — Build command: `npm run build` · Deploy command: `npx wrangler deploy`
+{
+  "name": "sudarshan-saha",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./out",
+    "not_found_handling": "404-page"
+  }
+}

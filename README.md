@@ -46,3 +46,13 @@ Every section is a `<Panel>`; scrolling down slides the strip left, panel by pan
 - Below 1024px the same markup renders as a normal vertical page.
 
 To add a section: wrap it in `<Panel id="…" label="…" className="lg:w-screen">`. Give it `aside` + `rail` if it should scroll vertically.
+
+## Deploy (Cloudflare)
+
+The site is a static export: `npm run build` writes plain files to `out/`, and `wrangler.jsonc` tells Cloudflare
+to serve that folder as static assets.
+
+- Build command: `npm run build`
+- Deploy command: `npx wrangler deploy`
+
+Locally, `npm start` serves the built `out/` folder; use `npm run dev` while editing.
