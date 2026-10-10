@@ -1,5 +1,4 @@
 import { About } from "@/components/About";
-import { Brands } from "@/components/Brands";
 import { BrandWall } from "@/components/BrandWall";
 import { Dock } from "@/components/Dock";
 import { Expertise } from "@/components/Expertise";
@@ -31,7 +30,6 @@ export default function HomePage() {
           <About />
           <Expertise />
           <Process />
-          <Brands />
           <BrandWall />
           <FeaturedWork />
           <Intro />

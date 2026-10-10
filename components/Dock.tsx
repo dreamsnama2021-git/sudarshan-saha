@@ -11,7 +11,7 @@ type DockItem = { label: string; href: string; icon: LucideIcon; panels: string[
 const ITEMS: DockItem[] = [
   { label: "Home", href: "#top", icon: House, panels: ["top"] },
   { label: "About", href: "#about", icon: User, panels: ["about", "intro", "testimonial"] },
-  { label: "Services", href: "#expertise", icon: LayoutGrid, panels: ["expertise", "brands", "brand-wall", "work", "process"] },
+  { label: "Services", href: "#expertise", icon: LayoutGrid, panels: ["expertise", "brand-wall", "work", "process"] },
   { label: "Connect", href: "#footer", icon: Send, panels: ["footer"] },
 ];
 

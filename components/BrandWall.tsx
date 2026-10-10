@@ -67,7 +67,7 @@ function BrandTile({ brand, index }: { brand: Project; index: number }) {
   );
 }
 
-/** Option 2 of "Brands I've worked with": a one-screen logo wall. */
+/** "Brands I've worked with": a one-screen logo wall. */
 export function BrandWall() {
   return (
     <Panel
